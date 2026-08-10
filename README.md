@@ -1,6 +1,6 @@
 # MedicButtonSplintRigging
 
-A Kenshi mod built using the KenshiLib framework.
+A simple QoL mod for Kenshi that adds a "Splint Rigging" job to the medic button when shift-clicking.
 
 Get it from your preferred modding platform:
 - **Steam Workshop**: [TBD:MedicButtonSplintRigging](https://steamcommunity.com/sharedfiles/filedetails/?id=TBD)
@@ -8,7 +8,7 @@ Get it from your preferred modding platform:
 
 ## Features
 
-- TBD
+- Adds a "Splint Rigging" job to the medic button when shift-clicking.
 
 ## Building from source
 
