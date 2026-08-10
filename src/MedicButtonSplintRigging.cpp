@@ -6,11 +6,12 @@
 #include <kenshi/GameWorld.h>
 #include <kenshi/Globals.h>
 #include <kenshi/PlayerInterface.h>
-#include <kenshi/gui/TitleScreen.h>
 
 #include "version.h"
 
 #include <sstream>
+
+const static bool kDebugLogEnabled = true;
 
 // -----------------------------------------------------------------------
 // Deferred splint rigging injection state
@@ -33,10 +34,17 @@ struct PendingSplintJob
 
 static PendingSplintJob gPendingSplintJob = {false, 0, nullptr, 0.0F, 0.0F, 0.0F};
 
-// -----------------------------------------------------------------------
-// Hook: PlayerInterface::newPlayerTaskSelectedCharacters
-// Pass-through only — splint rigging is injected via shift+click jobs.
-// -----------------------------------------------------------------------
+static void InitPendingSplintJob(PlayerInterface *playerInterface, const Ogre::Vector3 &loc)
+{
+    gPendingSplintJob.active = true;
+    gPendingSplintJob.framesRemaining = 2;
+    gPendingSplintJob.playerInterface = playerInterface;
+    gPendingSplintJob.locationX = loc.x;
+    gPendingSplintJob.locationY = loc.y;
+    gPendingSplintJob.locationZ = loc.z;
+}
+
+// Resolved via GetRealAddress — no hook needed; called directly from main loop
 void (*newPlayerTaskSelectedCharacters_orig)(
     PlayerInterface *thisptr,
     TaskType taskType,
@@ -45,16 +53,6 @@ void (*newPlayerTaskSelectedCharacters_orig)(
     const Ogre::Vector3 &clickPosition,
     bool addDontClear
 ) = nullptr;
-
-void newPlayerTaskSelectedCharacters_hook(
-    PlayerInterface *thisptr,
-    TaskType taskType,
-    const hand &targetH,
-    Building *destinationIndoors,
-    const Ogre::Vector3 &clickPosition,
-    bool addDontClear
-)
-{ newPlayerTaskSelectedCharacters_orig(thisptr, taskType, targetH, destinationIndoors, clickPosition, addDontClear); }
 
 // -----------------------------------------------------------------------
 // Hook: PlayerInterface::addJobSelectedCharacters
@@ -72,41 +70,40 @@ void addJobSelectedCharacters_hook(
 
     if (task == JOB_MEDIC)
     {
-        std::ostringstream oss;
-        oss << "addJobSelectedCharacters: deferring splint rigging task"
-            << " shift=" << (shift ? "true" : "false") << " add=" << (add ? "true" : "false") << " location=("
-            << location.x << "," << location.y << "," << location.z << ")";
-        DebugLog(oss.str());
+        if (kDebugLogEnabled)
+        {
+            std::ostringstream logMessage;
+            logMessage << "addJobSelectedCharacters: deferring splint rigging task"
+                       << " shift=" << (shift ? "true" : "false") << " add=" << (add ? "true" : "false")
+                       << " location=(" << location.x << "," << location.y << "," << location.z << ")";
+            DebugLog(logMessage.str());
+        }
 
-        gPendingSplintJob.active = true;
-        gPendingSplintJob.framesRemaining = 2;
-        gPendingSplintJob.playerInterface = thisptr;
-        gPendingSplintJob.locationX = location.x;
-        gPendingSplintJob.locationY = location.y;
-        gPendingSplintJob.locationZ = location.z;
+        InitPendingSplintJob(thisptr, location);
     }
     else if (task == JOB_REPAIR_ROBOT)
     {
         if (gPendingSplintJob.active)
         {
-            DebugLog(
-                "addJobSelectedCharacters: JOB_REPAIR_ROBOT added, refreshing "
-                "pending splint task"
-            );
+            if (kDebugLogEnabled)
+            {
+                DebugLog(
+                    "addJobSelectedCharacters: JOB_REPAIR_ROBOT added, refreshing "
+                    "pending splint task"
+                );
+            }
             gPendingSplintJob.framesRemaining = 2;
         }
         else
         {
-            DebugLog(
-                "addJobSelectedCharacters: JOB_REPAIR_ROBOT added, no pending "
-                "injection. Adding pending splint task."
-            );
-            gPendingSplintJob.active = true;
-            gPendingSplintJob.framesRemaining = 2;
-            gPendingSplintJob.playerInterface = thisptr;
-            gPendingSplintJob.locationX = location.x;
-            gPendingSplintJob.locationY = location.y;
-            gPendingSplintJob.locationZ = location.z;
+            if (kDebugLogEnabled)
+            {
+                DebugLog(
+                    "addJobSelectedCharacters: JOB_REPAIR_ROBOT added, no pending "
+                    "injection. Adding pending splint task."
+                );
+            }
+            InitPendingSplintJob(thisptr, location);
         }
     }
 }
@@ -122,17 +119,17 @@ void GameWorld_mainLoop_hook(GameWorld *thisptr, float time)
     if (gPendingSplintJob.active)
     {
         gPendingSplintJob.framesRemaining--;
-        std::ostringstream oss;
-        oss << "mainLoop: pending splint task framesRemaining=" << gPendingSplintJob.framesRemaining;
-        DebugLog(oss.str());
+        if (kDebugLogEnabled)
+        {
+            std::ostringstream logMessage;
+            logMessage << "mainLoop: pending splint task framesRemaining=" << gPendingSplintJob.framesRemaining;
+            DebugLog(logMessage.str());
+        }
         if (gPendingSplintJob.framesRemaining <= 0)
         {
-            DebugLog(
-                "mainLoop: flushing pending splint task via "
-                "newPlayerTaskSelectedCharacters"
-            );
+            DebugLog("[Info]: Injecting deferred splint rigging task for shift+medic button click");
 
-            auto &pendingLocation = reinterpret_cast<const Ogre::Vector3 &>(gPendingSplintJob.locationX);
+            const auto &pendingLocation = reinterpret_cast<const Ogre::Vector3 &>(gPendingSplintJob.locationX);
             hand nullHand;
             newPlayerTaskSelectedCharacters_orig(
                 gPendingSplintJob.playerInterface, SPLINT_ORDER, nullHand, nullptr, pendingLocation, true
@@ -148,17 +145,9 @@ __declspec(dllexport) void startPlugin()
 {
     DebugLog("v" MBSR_VERSION_STRING " loaded");
 
-    if (KenshiLib::SUCCESS != KenshiLib::AddHook(
-                                  KenshiLib::GetRealAddress(&PlayerInterface::newPlayerTaskSelectedCharacters),
-                                  newPlayerTaskSelectedCharacters_hook, &newPlayerTaskSelectedCharacters_orig
-                              ))
-    {
-        ErrorLog("Could not add newPlayerTaskSelectedCharacters hook!");
-    }
-    else
-    {
-        DebugLog("newPlayerTaskSelectedCharacters hook installed");
-    }
+    newPlayerTaskSelectedCharacters_orig = reinterpret_cast<decltype(newPlayerTaskSelectedCharacters_orig)>(
+        KenshiLib::GetRealAddress(&PlayerInterface::newPlayerTaskSelectedCharacters)
+    );
 
     if (KenshiLib::SUCCESS != KenshiLib::AddHook(
                                   KenshiLib::GetRealAddress(&PlayerInterface::addJobSelectedCharacters),
