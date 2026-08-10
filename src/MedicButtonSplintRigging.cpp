@@ -11,7 +11,7 @@
 
 #include <sstream>
 
-const static bool kDebugLogEnabled = true;
+const static bool kDebugLogEnabled = false;
 
 // -----------------------------------------------------------------------
 // Deferred splint rigging injection state
