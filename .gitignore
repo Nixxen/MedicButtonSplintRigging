@@ -1,0 +1,20 @@
+# Build artifacts
+x64/
+*.o
+*.obj
+
+# Output files
+*.exe
+*.dll
+
+# Temporary files
+*.tmp
+*.log
+
+# Generated version files
+build_number.txt
+src/version_build.h
+
+# IDE
+.vs/
+.idea/

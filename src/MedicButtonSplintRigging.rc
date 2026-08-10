@@ -1,0 +1,34 @@
+#include <winres.h>
+#include "version.h"
+
+#define STRINGIZE2(x) #x
+#define STRINGIZE(x) STRINGIZE2(x)
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION     MBSR_VERSION_MAJOR, MBSR_VERSION_MINOR, MBSR_VERSION_PATCH, MBSR_VERSION_BUILD
+PRODUCTVERSION  MBSR_VERSION_MAJOR, MBSR_VERSION_MINOR, MBSR_VERSION_PATCH, MBSR_VERSION_BUILD
+FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
+FILEFLAGS       0
+FILEOS          VOS_NT_WINDOWS32
+FILETYPE        VFT_DLL
+FILESUBTYPE     VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904B0"
+        BEGIN
+            VALUE "FileDescription",  "MedicButtonSplintRigging (RE_Kenshi)"
+            VALUE "FileVersion",      STRINGIZE(MBSR_VERSION_MAJOR) "." STRINGIZE(MBSR_VERSION_MINOR) "." STRINGIZE(MBSR_VERSION_PATCH) "." STRINGIZE(MBSR_VERSION_BUILD)
+            VALUE "InternalName",     "MedicButtonSplintRigging"
+            VALUE "OriginalFilename", "MedicButtonSplintRigging.dll"
+            VALUE "ProductName",      "MedicButtonSplintRigging"
+            VALUE "ProductVersion",   STRINGIZE(MBSR_VERSION_MAJOR) "." STRINGIZE(MBSR_VERSION_MINOR) "." STRINGIZE(MBSR_VERSION_PATCH) "." STRINGIZE(MBSR_VERSION_BUILD)
+            VALUE "CompanyName",      ""
+            VALUE "LegalCopyright",   ""
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
