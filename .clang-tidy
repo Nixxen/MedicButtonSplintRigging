@@ -1,0 +1,16 @@
+Checks: >
+  bugprone-*,
+  clang-analyzer-*,
+  modernize-*,
+  -modernize-use-trailing-return-type,
+  -modernize-avoid-c-arrays,
+  -modernize-return-braced-init-list,
+  -modernize-use-default-member-init,
+  -modernize-use-using,
+  -modernize-loop-convert,
+  readability-*
+CheckOptions:
+  - key: readability-magic-numbers.IgnoredFloatingPointValues
+    value: "0.5;1.0;22.5;67.5;100.0;112.5;157.5;180;202.5;247.5;292.5;337.5;360"
+WarningsAsErrors: ""
+FormatStyle: file
