@@ -23,8 +23,8 @@ BEGIN
             VALUE "OriginalFilename", "MedicButtonSplintRigging.dll"
             VALUE "ProductName",      "MedicButtonSplintRigging"
             VALUE "ProductVersion",   STRINGIZE(MBSR_VERSION_MAJOR) "." STRINGIZE(MBSR_VERSION_MINOR) "." STRINGIZE(MBSR_VERSION_PATCH) "." STRINGIZE(MBSR_VERSION_BUILD)
-            VALUE "CompanyName",      ""
-            VALUE "LegalCopyright",   ""
+            VALUE "CompanyName",      "Nixxen"
+            VALUE "LegalCopyright",   "Copyright (c) 2026 Nixxen"
         END
     END
     BLOCK "VarFileInfo"
